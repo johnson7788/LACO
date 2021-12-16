@@ -15,7 +15,6 @@ If you use LACO in your work, please cite it as follows:
 环境设置
 
 - python 3.6+
-
 - Tensorflow 1.12.0+
 
 环境准备

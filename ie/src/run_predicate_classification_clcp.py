@@ -17,7 +17,7 @@ from ie.evaluate_main import evaluate_main
 from common.global_config import get_ie_config, get_job_id, get_schema_set, get_train_para, get_pretrain_model_path
 import random
 
-flags = tf.flags
+flags = tf.compat.v1.flags
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
@@ -110,25 +110,25 @@ flags.DEFINE_list(
     "labels_list", [],
     "labels which need to train.")
 
-tf.flags.DEFINE_string(
+tf.compat.v1.flags.DEFINE_string(
     "tpu_name", None,
     "The Cloud TPU to use for training. This should be either the name "
     "used when creating the Cloud TPU, or a grpc://ip.address.of.tpu:8470 "
     "url.")
 
-tf.flags.DEFINE_string(
+tf.compat.v1.flags.DEFINE_string(
     "tpu_zone", None,
     "[Optional] GCE zone where the Cloud TPU is located in. If not "
     "specified, we will attempt to automatically detect the GCE project from "
     "metadata.")
 
-tf.flags.DEFINE_string(
+tf.compat.v1.flags.DEFINE_string(
     "gcp_project", None,
     "[Optional] Project name for the Cloud TPU-enabled project. If not "
     "specified, we will attempt to automatically detect the GCE project from "
     "metadata.")
 
-tf.flags.DEFINE_string("master", None, "[Optional] TensorFlow master URL.")
+tf.compat.v1.flags.DEFINE_string("master", None, "[Optional] TensorFlow master URL.")
 
 flags.DEFINE_integer(
     "num_tpu_cores", 8,
@@ -209,7 +209,7 @@ class DataProcessor(object):
     @classmethod
     def _read_tsv(cls, input_file, quotechar=None):
         """Reads a tab separated value file."""
-        with tf.gfile.Open(input_file, "r") as f:
+        with tf.io.gfile.GFile(input_file, "r") as f:
             reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
             lines = []
             for line in reader:
@@ -433,21 +433,21 @@ def convert_single_example(ex_index, example, token_label_list, label_list, max_
 
 
     if ex_index < 3:
-        tf.logging.info("*** Example ***")
-        tf.logging.info("guid: %s" % (example.guid))
-        tf.logging.info("tokens: %s" % " ".join(
+        tf.compat.v1.logging.info("*** Example ***")
+        tf.compat.v1.logging.info("guid: %s" % (example.guid))
+        tf.compat.v1.logging.info("tokens: %s" % " ".join(
             [tokenization.printable_text(x) for x in tokens]))
-        tf.logging.info("input_ids: %s" % " ".join([str(x) for x in input_ids]))
-        tf.logging.info("input_mask: %s" % " ".join([str(x) for x in input_mask]))
-        tf.logging.info("segment_ids: %s" % " ".join([str(x) for x in segment_ids]))
-        tf.logging.info("token_label_ids: %s" % " ".join([str(x) for x in token_label_ids]))
-        tf.logging.info("label_ids: %s" % " ".join([str(x) for x in label_ids]))
-        tf.logging.info("fit_labelspace_positions: %s" % " ".join([str(x) for x in fit_labelspace_positions]))
-        tf.logging.info("fit_docspace_positions: %s" % " ".join([str(x) for x in fit_docspace_positions]))
-        tf.logging.info("len of (fit_labelspace_positions): %s" % len(fit_labelspace_positions))
-        tf.logging.info("fit_labelspace_mask_positions: %s" % " ".join([str(x) for x in fit_labelspace_mask_positions]))
-        tf.logging.info("fit_labelspace_given_positions: %s" % " ".join([str(x) for x in fit_labelspace_given_positions]))
-        tf.logging.info("mask_lm_ids: %s" % " ".join([str(x) for x in mask_lm_ids]))
+        tf.compat.v1.logging.info("input_ids: %s" % " ".join([str(x) for x in input_ids]))
+        tf.compat.v1.logging.info("input_mask: %s" % " ".join([str(x) for x in input_mask]))
+        tf.compat.v1.logging.info("segment_ids: %s" % " ".join([str(x) for x in segment_ids]))
+        tf.compat.v1.logging.info("token_label_ids: %s" % " ".join([str(x) for x in token_label_ids]))
+        tf.compat.v1.logging.info("label_ids: %s" % " ".join([str(x) for x in label_ids]))
+        tf.compat.v1.logging.info("fit_labelspace_positions: %s" % " ".join([str(x) for x in fit_labelspace_positions]))
+        tf.compat.v1.logging.info("fit_docspace_positions: %s" % " ".join([str(x) for x in fit_docspace_positions]))
+        tf.compat.v1.logging.info("len of (fit_labelspace_positions): %s" % len(fit_labelspace_positions))
+        tf.compat.v1.logging.info("fit_labelspace_mask_positions: %s" % " ".join([str(x) for x in fit_labelspace_mask_positions]))
+        tf.compat.v1.logging.info("fit_labelspace_given_positions: %s" % " ".join([str(x) for x in fit_labelspace_given_positions]))
+        tf.compat.v1.logging.info("mask_lm_ids: %s" % " ".join([str(x) for x in mask_lm_ids]))
     feature = InputFeatures(
         input_ids=input_ids,
         input_mask=input_mask,
@@ -531,11 +531,11 @@ def file_based_convert_examples_to_features(
         examples, token_label_list, label_list, max_seq_length, tokenizer, output_file):
     """Convert a set of `InputExample`s to a TFRecord file."""
 
-    writer = tf.python_io.TFRecordWriter(output_file)
+    writer = tf.compat.v1.python_io.TFRecordWriter(output_file)
 
     for (ex_index, example) in enumerate(examples):
         if ex_index % 10000 == 0:
-            tf.logging.info("Writing example %d of %d" % (ex_index, len(examples)))
+            tf.compat.v1.logging.info("Writing example %d of %d" % (ex_index, len(examples)))
         feature = convert_single_example(ex_index, example, token_label_list, label_list,
                                          max_seq_length, tokenizer)
 
@@ -568,29 +568,29 @@ def file_based_input_fn_builder(input_file, seq_length, label_length,
     """Creates an `input_fn` closure to be passed to TPUEstimator."""
 
     name_to_features = {
-        "input_ids": tf.FixedLenFeature([seq_length], tf.int64),
-        "input_mask": tf.FixedLenFeature([seq_length], tf.int64),
-        "segment_ids": tf.FixedLenFeature([seq_length], tf.int64),
-        "token_label_ids": tf.FixedLenFeature([seq_length], tf.int64),
-        "label_ids": tf.FixedLenFeature([label_length], tf.int64),
-        "fit_labelspace_positions": tf.FixedLenFeature([label_length], tf.int64),
-        "fit_docspace_positions": tf.FixedLenFeature([seq_length-label_length], tf.int64),
-        "is_real_example": tf.FixedLenFeature([], tf.int64),
-        "fit_labelspace_mask_positions" : tf.FixedLenFeature([label_length-1], tf.int64),
-        "fit_labelspace_given_positions" : tf.FixedLenFeature([1], tf.int64),
-        "mask_lm_ids" :tf.FixedLenFeature([label_length-1], tf.int64),
+        "input_ids": tf.compat.v1.FixedLenFeature([seq_length], tf.int64),
+        "input_mask": tf.compat.v1.FixedLenFeature([seq_length], tf.int64),
+        "segment_ids": tf.compat.v1.FixedLenFeature([seq_length], tf.int64),
+        "token_label_ids": tf.compat.v1.FixedLenFeature([seq_length], tf.int64),
+        "label_ids": tf.compat.v1.FixedLenFeature([label_length], tf.int64),
+        "fit_labelspace_positions": tf.compat.v1.FixedLenFeature([label_length], tf.int64),
+        "fit_docspace_positions": tf.compat.v1.FixedLenFeature([seq_length-label_length], tf.int64),
+        "is_real_example": tf.compat.v1.FixedLenFeature([], tf.int64),
+        "fit_labelspace_mask_positions" : tf.compat.v1.FixedLenFeature([label_length-1], tf.int64),
+        "fit_labelspace_given_positions" : tf.compat.v1.FixedLenFeature([1], tf.int64),
+        "mask_lm_ids" :tf.compat.v1.FixedLenFeature([label_length-1], tf.int64),
     }
 
     def _decode_record(record, name_to_features):
         """Decodes a record to a TensorFlow example."""
-        example = tf.parse_single_example(record, name_to_features)
+        example = tf.compat.v1.parse_single_example(record, name_to_features)
 
         # tf.Example only supports tf.int64, but the TPU only supports tf.int32.
         # So cast all int64 to int32.
         for name in list(example.keys()):
             t = example[name]
             if t.dtype == tf.int64:
-                t = tf.to_int32(t)
+                t = tf.compat.v1.to_int32(t)
             example[name] = t
         return example
 
@@ -606,7 +606,7 @@ def file_based_input_fn_builder(input_file, seq_length, label_length,
             d = d.shuffle(buffer_size=100)
 
         d = d.apply(
-            tf.contrib.data.map_and_batch(
+            tf.data.experimental.map_and_batch(
                 lambda record: _decode_record(record, name_to_features),
                 batch_size=batch_size,
                 drop_remainder=drop_remainder))
@@ -654,39 +654,39 @@ def create_model(bert_config, is_training, input_ids, input_mask, segment_ids,
     token_label_output_layer = gather_indexes(token_label_output_layer, positions)
     token_label_output_layer = tf.reshape(token_label_output_layer, [-1, num_labels, token_label_hidden_size])
 
-    token_label_output_weight = tf.get_variable(
+    token_label_output_weight = tf.compat.v1.get_variable(
         "token_label_output_weight", [num_labels, token_label_hidden_size],
-        initializer=tf.truncated_normal_initializer(stddev=0.02))
+        initializer=tf.compat.v1.truncated_normal_initializer(stddev=0.02))
 
-    token_label_output_bias = tf.get_variable(
-        "token_label_output_bias", [num_labels], initializer=tf.zeros_initializer())
+    token_label_output_bias = tf.compat.v1.get_variable(
+        "token_label_output_bias", [num_labels], initializer=tf.compat.v1.zeros_initializer())
     
     def joint_embedding(doc_output_layer, token_label_output_layer):
         x_emb_norm = tf.nn.l2_normalize(doc_output_layer, axis=2)
         w_class_norm = tf.nn.l2_normalize(token_label_output_layer, axis=2)
-        w_class_norm = tf.transpose(w_class_norm, [0, 2, 1])
+        w_class_norm = tf.transpose(a=w_class_norm, perm=[0, 2, 1])
         G = tf.matmul(x_emb_norm, w_class_norm)
         G = tf.expand_dims(G, axis=-1)
         label_length = token_label_output_layer.shape[-2].value
-        Att_v = tf.contrib.layers.conv2d(G, num_outputs=label_length, kernel_size=[10, 10], padding='SAME',
+        Att_v = tf.nn.conv2d(G, num_outputs=label_length, kernel_size=[10, 10], padding='SAME',
                                          activation_fn=tf.nn.relu)
-        Att_v = tf.reduce_max(Att_v, axis=-1, keepdims=True)
+        Att_v = tf.reduce_max(input_tensor=Att_v, axis=-1, keepdims=True)
         Att_v = tf.squeeze(Att_v)
-        Att_v = tf.reduce_max(Att_v, axis=-1, keepdims=True)
+        Att_v = tf.reduce_max(input_tensor=Att_v, axis=-1, keepdims=True)
         Att_v_tan = tf.tanh(Att_v)
         x_emb_norm = tf.squeeze(x_emb_norm)
         x_att = tf.multiply(x_emb_norm, Att_v_tan)
-        H_enc = tf.reduce_sum(x_att, axis=1)
+        H_enc = tf.reduce_sum(input_tensor=x_att, axis=1)
         return H_enc
 
     H_enc = joint_embedding(doc_output_layer, token_label_output_layer)
-    with tf.variable_scope("token_label_loss"):
+    with tf.compat.v1.variable_scope("token_label_loss"):
         if is_training:
-            H_enc = tf.nn.dropout(H_enc, keep_prob=0.9)
+            H_enc = tf.nn.dropout(H_enc, rate=1 - (0.9))
         input_tensor_mask = gather_indexes(token_label_output_layer, fit_labelspace_mask_positions)
         given_tensor = gather_indexes(token_label_output_layer, fit_labelspace_given_positions)
    
-        input_tensor_mask = tf.layers.dense(
+        input_tensor_mask = tf.compat.v1.layers.dense(
             input_tensor_mask,
             units=bert_config.hidden_size,
             activation=modeling.get_activation(bert_config.hidden_act),
@@ -694,7 +694,7 @@ def create_model(bert_config, is_training, input_ids, input_mask, segment_ids,
                 bert_config.initializer_range))
 
         input_tensor_mask = modeling.layer_norm(input_tensor_mask)
-        given_tensor = tf.layers.dense(
+        given_tensor = tf.compat.v1.layers.dense(
             given_tensor,
             units=bert_config.hidden_size,
             activation=modeling.get_activation(bert_config.hidden_act),
@@ -702,15 +702,15 @@ def create_model(bert_config, is_training, input_ids, input_mask, segment_ids,
                 bert_config.initializer_range))
         given_tensor = modeling.layer_norm(given_tensor)
 
-        output_bias_mask = tf.get_variable(
+        output_bias_mask = tf.compat.v1.get_variable(
             "output_bias_mask",
             shape=[2],
-            initializer=tf.zeros_initializer())
-        output_weights_mask = tf.get_variable(
+            initializer=tf.compat.v1.zeros_initializer())
+        output_weights_mask = tf.compat.v1.get_variable(
             "output_weights_mask",
             shape=[2, bert_config.hidden_size*2],
             initializer=modeling.create_initializer(bert_config.initializer_range))
-        fit_labelspace_given_positions_shape=tf.shape(fit_labelspace_given_positions)        
+        fit_labelspace_given_positions_shape=tf.shape(input=fit_labelspace_given_positions)        
         
         given_tensor=tf.reshape(given_tensor,[fit_labelspace_given_positions_shape[0],FLAGS.mask_num,-1])#bs,mask_num,768        
         given_tensor  = tf.broadcast_to(given_tensor, [fit_labelspace_given_positions_shape[0], num_labels-FLAGS.mask_num, bert_config.hidden_size]) #32,54-unmask,768
@@ -724,14 +724,14 @@ def create_model(bert_config, is_training, input_ids, input_mask, segment_ids,
         label_ids = tf.cast(labels, tf.float32)
         mask_label_ids =tf.reshape(mask_lm_ids,[-1]) 
         mask_label_ids =tf.one_hot(mask_label_ids , depth=2, dtype=tf.float32)
-        per_example_loss_mask = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_mask, labels=mask_label_ids),axis=-1)
-        loss_mask = tf.reduce_mean(per_example_loss_mask)
+        per_example_loss_mask = tf.reduce_sum(input_tensor=tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_mask, labels=mask_label_ids),axis=-1)
+        loss_mask = tf.reduce_mean(input_tensor=per_example_loss_mask)
 
         logits_wx = tf.matmul(H_enc, token_label_output_weight, transpose_b=True)
         logits = tf.nn.bias_add(logits_wx, token_label_output_bias)
         probabilities = tf.sigmoid(logits)
-        per_example_loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=label_ids), axis=-1)
-        loss = tf.reduce_mean(per_example_loss)
+        per_example_loss = tf.reduce_sum(input_tensor=tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=label_ids), axis=-1)
+        loss = tf.reduce_mean(input_tensor=per_example_loss)
         predict_ids = tf.cast(probabilities > 0.5, tf.int32)
     return loss+5*loss_mask, per_example_loss, probabilities, predict_ids, labels
 
@@ -740,11 +740,11 @@ def get_masked_lm_output(bert_config, input_tensor, output_weights,fit_labelspac
   """Get loss and log probs for the masked LM."""
   input_tensor = gather_indexes(input_tensor, fit_labelspace_mask_positions)
 
-  with tf.variable_scope("cls/predictions"):
+  with tf.compat.v1.variable_scope("cls/predictions"):
     # We apply one more non-linear transformation before the output layer.
     # This matrix is not used after pre-training.
-    with tf.variable_scope("transform"):
-      input_tensor = tf.layers.dense(
+    with tf.compat.v1.variable_scope("transform"):
+      input_tensor = tf.compat.v1.layers.dense(
           input_tensor,
           units=bert_config.hidden_size,
           activation=modeling.get_activation(bert_config.hidden_act),
@@ -754,10 +754,10 @@ def get_masked_lm_output(bert_config, input_tensor, output_weights,fit_labelspac
 
     # The output weights are the same as the input embeddings, but there is
     # an output-only bias for each token.
-    output_bias = tf.get_variable(
+    output_bias = tf.compat.v1.get_variable(
         "output_bias",
         shape=[bert_config.vocab_size],
-        initializer=tf.zeros_initializer())
+        initializer=tf.compat.v1.zeros_initializer())
 
     logits = tf.matmul(input_tensor, output_weights, transpose_b=True)
     logits = tf.nn.bias_add(logits, output_bias)
@@ -769,8 +769,8 @@ def get_masked_lm_output(bert_config, input_tensor, output_weights,fit_labelspac
     one_hot_labels = tf.one_hot(
         label_ids, depth=2, dtype=tf.float32)
 
-    per_example_loss = -tf.reduce_sum(log_probs * one_hot_labels, axis=[-1])
-    numerator = tf.reduce_sum(per_example_loss)
+    per_example_loss = -tf.reduce_sum(input_tensor=log_probs * one_hot_labels, axis=[-1])
+    numerator = tf.reduce_sum(input_tensor=per_example_loss)
     loss = numerator
 
   return (loss, per_example_loss, log_probs)
@@ -783,9 +783,9 @@ def model_fn_builder(bert_config, num_token_labels, num_labels, init_checkpoint,
     def model_fn(features, labels, mode, params):
         """The `model_fn` for TPUEstimator."""
 
-        tf.logging.info("*** Features ***")
+        tf.compat.v1.logging.info("*** Features ***")
         for name in sorted(features.keys()):
-            tf.logging.info("  name = %s, shape = %s" % (name, features[name].shape))
+            tf.compat.v1.logging.info("  name = %s, shape = %s" % (name, features[name].shape))
         input_ids = features["input_ids"]
         input_mask = features["input_mask"]
         segment_ids = features["segment_ids"]
@@ -799,7 +799,7 @@ def model_fn_builder(bert_config, num_token_labels, num_labels, init_checkpoint,
         if "is_real_example" in features:
             is_real_example = tf.cast(features["is_real_example"], dtype=tf.float32)
         else:
-            is_real_example = tf.ones(tf.shape(label_ids), dtype=tf.float32)
+            is_real_example = tf.ones(tf.shape(input=label_ids), dtype=tf.float32)
         is_training = (mode == tf.estimator.ModeKeys.TRAIN)
 
         (total_loss, token_label_per_example_loss, token_label_logits, token_label_predictions, token_label_ids_labelspace) = create_model(
@@ -807,20 +807,20 @@ def model_fn_builder(bert_config, num_token_labels, num_labels, init_checkpoint,
             num_token_labels, num_labels, use_one_hot_embeddings,fit_labelspace_mask_positions,fit_labelspace_given_positions,mask_lm_ids)
 
 
-        tvars = tf.trainable_variables()
+        tvars = tf.compat.v1.trainable_variables()
         initialized_variable_names = {}
         scaffold_fn = None
         if init_checkpoint:
             (assignment_map, initialized_variable_names
              ) = modeling.get_assignment_map_from_checkpoint(tvars, init_checkpoint)
-            tf.train.init_from_checkpoint(init_checkpoint, assignment_map)
+            tf.compat.v1.train.init_from_checkpoint(init_checkpoint, assignment_map)
 
-        tf.logging.info("**** Trainable Variables ****")
+        tf.compat.v1.logging.info("**** Trainable Variables ****")
         for var in tvars:
             init_string = ""
             if var.name in initialized_variable_names:
                 init_string = ", *INIT_FROM_CKPT*"
-            tf.logging.info("  name = %s, shape = %s%s", var.name, var.shape,
+            tf.compat.v1.logging.info("  name = %s, shape = %s%s", var.name, var.shape,
                             init_string)
 
         output_spec = None
@@ -834,7 +834,7 @@ def model_fn_builder(bert_config, num_token_labels, num_labels, init_checkpoint,
             train_op = optimization.create_optimizer(
                 total_loss, learning_rate, num_train_steps, num_warmup_steps, use_tpu,
             FLAGS.layerwise_lr_decay, bert_config.num_hidden_layers) #num_hidden_layers=12
-            logging_hook = tf.train.LoggingTensorHook({"total_loss": total_loss}, every_n_iter=100)
+            logging_hook = tf.estimator.LoggingTensorHook({"total_loss": total_loss}, every_n_iter=100)
             output_spec = tf.estimator.EstimatorSpec(
                 mode=mode,
                 loss=total_loss,
@@ -857,16 +857,16 @@ def model_fn_builder(bert_config, num_token_labels, num_labels, init_checkpoint,
                 token_label_f_macro = tf_metrics.f1(token_label_ids, token_label_predictions, num_token_labels,
                                                                               pos_indices_list,
                                                                               average="macro")
-                token_label_loss = tf.metrics.mean(values=token_label_per_example_loss, weights=is_real_example)
+                token_label_loss = tf.compat.v1.metrics.mean(values=token_label_per_example_loss, weights=is_real_example)
 
                 #HammingLoss
                 aa = tf.cast(token_label_ids, tf.int32)
                 bb = tf.cast(token_label_predictions, tf.int32)
                 no_elements_equal = tf.cast(tf.not_equal(aa, bb), tf.int32)
-                row_predict_ids = tf.cast(tf.reduce_sum(no_elements_equal, axis=-1), tf.float32)
-                row_label_ids = tf.cast(tf.reduce_sum(tf.ones_like(token_label_ids), axis=-1), tf.float32)
+                row_predict_ids = tf.cast(tf.reduce_sum(input_tensor=no_elements_equal, axis=-1), tf.float32)
+                row_label_ids = tf.cast(tf.reduce_sum(input_tensor=tf.ones_like(token_label_ids), axis=-1), tf.float32)
                 per_instance = tf.divide(row_predict_ids, row_label_ids)
-                hamming_loss = tf.metrics.mean(values=per_instance)
+                hamming_loss = tf.compat.v1.metrics.mean(values=per_instance)
                 return {
                     "eval_token_label_precision(micro)": token_label_precision_micro,
                     "eval_token_label_recall(micro)": token_label_recall_micro,
@@ -897,7 +897,7 @@ def model_fn_builder(bert_config, num_token_labels, num_labels, init_checkpoint,
 
 
 def run_pred():
-    tf.logging.set_verbosity(tf.logging.INFO)
+    tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
 
     processors = {
         "laco_clcp": Multi_Label_Classification_Processor,
@@ -918,7 +918,7 @@ def run_pred():
             "was only trained up to sequence length %d" %
             (FLAGS.max_seq_length, bert_config.max_position_embeddings))
 
-    tf.gfile.MakeDirs(FLAGS.output_dir)
+    tf.compat.v1.gfile.MakeDirs(FLAGS.output_dir)
 
     task_name = FLAGS.task_name.lower()
 
@@ -977,10 +977,10 @@ def run_pred():
         train_file = os.path.join(FLAGS.output_dir, "train.tf_record")
         file_based_convert_examples_to_features(
             train_examples, token_label_list, label_list, FLAGS.max_seq_length, tokenizer, train_file)
-        tf.logging.info("***** Running training *****")
-        tf.logging.info("  Num examples = %d", len(train_examples))
-        tf.logging.info("  Batch size = %d", FLAGS.train_batch_size)
-        tf.logging.info("  Num steps = %d", num_train_steps)
+        tf.compat.v1.logging.info("***** Running training *****")
+        tf.compat.v1.logging.info("  Num examples = %d", len(train_examples))
+        tf.compat.v1.logging.info("  Batch size = %d", FLAGS.train_batch_size)
+        tf.compat.v1.logging.info("  Num steps = %d", num_train_steps)
 
         early_stopping_hook = tf.estimator.experimental.stop_if_no_increase_hook(estimator=estimator,
                                                                        metric_name='eval_token_label_f(micro)',
@@ -1027,11 +1027,11 @@ def run_pred():
         file_based_convert_examples_to_features(
             eval_examples, token_label_list, label_list, FLAGS.max_seq_length, tokenizer, eval_file)
 
-        tf.logging.info("***** Running evaluation *****")
-        tf.logging.info("  Num examples = %d (%d actual, %d padding)",
+        tf.compat.v1.logging.info("***** Running evaluation *****")
+        tf.compat.v1.logging.info("  Num examples = %d (%d actual, %d padding)",
                         len(eval_examples), num_actual_eval_examples,
                         len(eval_examples) - num_actual_eval_examples)
-        tf.logging.info("  Batch size = %d", FLAGS.eval_batch_size)
+        tf.compat.v1.logging.info("  Batch size = %d", FLAGS.eval_batch_size)
 
         # This tells the estimator to run through the entire set.
         eval_steps = None
@@ -1046,10 +1046,10 @@ def run_pred():
         result = estimator.evaluate(input_fn=eval_input_fn, steps=eval_steps)
 
         output_eval_file = os.path.join(FLAGS.output_dir, "eval_results.txt")
-        with tf.gfile.GFile(output_eval_file, "w") as writer:
-            tf.logging.info("***** Eval results *****")
+        with tf.io.gfile.GFile(output_eval_file, "w") as writer:
+            tf.compat.v1.logging.info("***** Eval results *****")
             for key in sorted(result.keys()):
-                tf.logging.info("%s = %s", key, str(result[key]))
+                tf.compat.v1.logging.info("%s = %s", key, str(result[key]))
                 writer.write("%s = %s\n" % (key, str(result[key])))
 
     if FLAGS.do_predict:
@@ -1061,11 +1061,11 @@ def run_pred():
                                                 FLAGS.max_seq_length, tokenizer,
                                                 predict_file)
 
-        tf.logging.info("***** Running prediction*****")
-        tf.logging.info("  Num examples = %d (%d actual, %d padding)",
+        tf.compat.v1.logging.info("***** Running prediction*****")
+        tf.compat.v1.logging.info("  Num examples = %d (%d actual, %d padding)",
                         len(predict_examples), num_actual_predict_examples,
                         len(predict_examples) - num_actual_predict_examples)
-        tf.logging.info("  Batch size = %d", FLAGS.predict_batch_size)
+        tf.compat.v1.logging.info("  Batch size = %d", FLAGS.predict_batch_size)
 
         predict_drop_remainder = True if FLAGS.use_tpu else False
         predict_input_fn = file_based_input_fn_builder(
@@ -1079,10 +1079,10 @@ def run_pred():
 
         output_score_value_file = os.path.join(FLAGS.output_dir, "predicate_score_value.txt")
         output_predicate_predict_file = os.path.join(FLAGS.output_dir, "predicate_predict.txt")
-        with tf.gfile.GFile(output_score_value_file, "w") as score_value_writer:
-            with tf.gfile.GFile(output_predicate_predict_file, "w") as predicate_predict_writer:
+        with tf.io.gfile.GFile(output_score_value_file, "w") as score_value_writer:
+            with tf.io.gfile.GFile(output_predicate_predict_file, "w") as predicate_predict_writer:
                 num_written_lines = 0
-                tf.logging.info("***** Predict results *****")
+                tf.compat.v1.logging.info("***** Predict results *****")
                 for (i, prediction) in enumerate(result):
                     token_label_prediction = prediction["token_label_predictions"]
                     token_label_logits = prediction["token_label_logits"]
@@ -1097,11 +1097,11 @@ def run_pred():
         assert num_written_lines == num_actual_predict_examples
         job_id = get_job_id()
         if FLAGS.do_test_with_results:
-            tf.logging.info("**** evaluate main ****")
+            tf.compat.v1.logging.info("**** evaluate main ****")
             evaluate_main(FLAGS.init_path_dir, job_id, FLAGS.model_idx_info)
 
         elapsed = (time.clock() - start)
-        tf.logging.info("  time_use  = %f", elapsed)
+        tf.compat.v1.logging.info("  time_use  = %f", elapsed)
 
 
 
